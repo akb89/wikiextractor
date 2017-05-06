@@ -555,4 +555,4 @@ class Extractor(object):
             json_data['revid'] = self.revid
         # We don't use json.dump(data, out) because we want to be
         # able to encode the string if the output is sys.stdout
-        return json.dumps(json_data, ensure_ascii=False)
+        return json_data

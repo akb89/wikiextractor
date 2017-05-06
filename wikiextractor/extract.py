@@ -70,8 +70,9 @@ def pages_from(input):
             page = []
 
 def extract(input_file):
-    file = fileinput.FileInput(input_file, openhook=fileinput.hook_compressed)
-    for page_data in pages_from(file):
-        id, revid, title, ns, page = page_data
-        print(Extractor(id, revid, title, page).extract_to_json())
-    file.close()
+    with open(input_file, 'r') as input_stream:
+        json_objects = []
+        for page_data in pages_from(input_stream):
+            id, revid, title, ns, page = page_data
+            json_objects.append(Extractor(id, revid, title, page).extract_to_json())
+        return json_objects
