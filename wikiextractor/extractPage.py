@@ -61,7 +61,7 @@ def process_data(input_file, ids, templates=False):
         opener = open
 
     input = opener(input_file)
-    print '<mediawiki>'
+    print('<mediawiki>')
 
     rang = ids.split('-')
     first = int(rang[0])
@@ -105,7 +105,7 @@ def process_data(input_file, ids, templates=False):
         elif tag == '/page':
             if page:
                 page.append(line)
-                print ''.join(page).encode('utf-8')
+                print(''.join(page).encode('utf-8'))
                 if not templates and curid == last:
                     break
             curid = 0
@@ -113,7 +113,7 @@ def process_data(input_file, ids, templates=False):
         elif page:
             page.append(line)
 
-    print '</mediawiki>'
+    print('</mediawiki>')
     input.close()
 
 def main():
