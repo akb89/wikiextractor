@@ -19,7 +19,7 @@ setuptools.setup(
     packages=['wikiextractor'],
     entry_points={
         'console_scripts': [
-            'wikiextractor = wikiextractor.wikiextractor:main'
+            'wikiextractor = wikiextractor.main:main'
         ],
     },
 )
