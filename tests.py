@@ -6,7 +6,7 @@ import sys
 import os.path
 import unittest
 
-from WikiExtractor import (
+from wikiextractor.wikiextractor import (
     normalizeTitle, unescape, ucfirst, lcfirst, splitParts,
     fullyQualifiedTemplateTitle, NextFile
 )

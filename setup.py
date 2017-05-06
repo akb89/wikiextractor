@@ -1,21 +1,25 @@
-from setuptools import setup
+"""Welcome to a primitivaly refactored version of Wikiextractor.
 
-def readme():
-    with open('README.md') as f:
-        return f.read()
+For now we have just modified the overall structure and setup.py file in order
+to make wikiextractor usable as a python module
+"""
 
-setup(
+import setuptools
+
+setuptools.setup(
     name='wikiextractor',
-
     description='A script that extracts and cleans text from a Wikipedia'
                 'database dump',
     author='Giuseppe Attardi',
     author_email='attardi@di.unipi.it',
     version='2.69',
-
-    url='https://github.com/attardi/wikiextractor',
-
-    license="GPL 3.0",
+    url='https://github.com/akb89/wikiextractor',
+    license='GPL 3.0',
     keywords=['text', 'nlp'],
-    scripts=['WikiExtractor.py']
+    packages=['wikiextractor'],
+    entry_points={
+        'console_scripts': [
+            'wikiextractor = wikiextractor.wikiextractor:main'
+        ],
+    },
 )
