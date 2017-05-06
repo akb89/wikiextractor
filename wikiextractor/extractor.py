@@ -492,7 +492,7 @@ class Extractor(object):
         """
         :param out: a memory file.
         """
-        logging.info('%s\t%s', self.id, self.title)
+        logging.debug('%s\t%s', self.id, self.title)
 
         # Separate header from text with a newline.
         if options.toHTML:
