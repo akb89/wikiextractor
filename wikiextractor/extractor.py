@@ -1,24 +1,29 @@
-import logging
-import sys
-import time
+import cgi
 import json
 import re
-import cgi
-from wikiextractor.options import options
+import sys
+import time
+
+import logger
+import wikiextractor.brace as brace_utils
+import wikiextractor.external as ext_utils
+import wikiextractor.parser as parser
+import wikiextractor.split as split_utils
+import wikiextractor.template_utils as template_utils
+import wikiextractor.utils as wutils
 from wikiextractor.frame import Frame
 from wikiextractor.magicwords import MagicWords
-import wikiextractor.utils as wutils
-import wikiextractor.external as ext_utils
-import wikiextractor.brace as brace_utils
-import wikiextractor.split as split_utils
+from wikiextractor.options import options
 from wikiextractor.template import Template
-import wikiextractor.template_utils as template_utils
-import wikiextractor.parser as parser
+
+logger = logging.getLogger(__name__)
+
 
 class Extractor(object):
     """
     An extraction task on a article.
     """
+
     def __init__(self, id, revid, title, lines):
         """
         :param id: id of page.
@@ -46,7 +51,7 @@ class Extractor(object):
 
         if not parameters:
             return templateParams
-        # logging.debug('%*s<templateParams: %s', self.frame.length, '', '|'.join(parameters))
+        # logger.debug('%*s<templateParams: %s', self.frame.length, '', '|'.join(parameters))
 
         # Parameters can be either named or unnamed. In the latter case, their
         # name is defined by their ordinal position (1, 2, 3, ...).
@@ -102,7 +107,7 @@ class Extractor(object):
                 if ']]' not in param:  # if the value does not contain a link, trim whitespace
                     param = param.strip()
                 templateParams[str(unnamedParameterCounter)] = param
-        # logging.debug('%*stemplateParams> %s', self.frame.length, '', '|'.join(templateParams.values()))
+        # logger.debug('%*stemplateParams> %s', self.frame.length, '', '|'.join(templateParams.values()))
         return templateParams
 
     def expandTemplate(self, body):
@@ -142,20 +147,22 @@ class Extractor(object):
         # Pipes inside inner templates and tplargs, or inside double rectangular
         # brackets within the template or tplargs are not taken into account in
         # this decomposition.
-        # The first part is called title, the other parts are simply called parts.
+        # The first part is called title, the other parts are simply called
+        # parts.
 
         # If a part has one or more equals signs in it, the first equals sign
         # determines the division into name = value. Equals signs inside inner
         # templates and tplargs, or inside double rectangular brackets within the
         # part are not taken into account in this decomposition. Parts without
-        # equals sign are indexed 1, 2, .., given as attribute in the <name> tag.
+        # equals sign are indexed 1, 2, .., given as attribute in the <name>
+        # tag.
 
         if self.frame.depth >= self.maxTemplateRecursionLevels:
             self.recursion_exceeded_2_errs += 1
-            # logging.debug('%*sEXPAND> %s', self.frame.depth, '', body)
+            # logger.debug('%*sEXPAND> %s', self.frame.depth, '', body)
             return ''
 
-        logging.debug('%*sEXPAND %s', self.frame.depth, '', body)
+        logger.debug('%*sEXPAND %s', self.frame.depth, '', body)
         parts = split_utils.splitParts(body)
         # title is the portion before the first |
         title = parts[0].strip()
@@ -174,7 +181,7 @@ class Extractor(object):
 
         if title in self.magicWords.values:
             ret = self.magicWords[title]
-            logging.debug('%*s<EXPAND %s %s', self.frame.depth, '', title, ret)
+            logger.debug('%*s<EXPAND %s %s', self.frame.depth, '', title, ret)
             return ret
 
         # Parser functions.
@@ -193,10 +200,11 @@ class Extractor(object):
         colon = title.find(':')
         if colon > 1:
             funct = title[:colon]
-            parts[0] = title[colon + 1:].strip()  # side-effect (parts[0] not used later)
+            # side-effect (parts[0] not used later)
+            parts[0] = title[colon + 1:].strip()
             # arguments after first are not evaluated
             ret = parser.callParserFunction(funct, parts, self)
-            logging.debug('%*s<EXPAND %s %s', self.frame.depth, '', funct, ret)
+            logger.debug('%*s<EXPAND %s %s', self.frame.depth, '', funct, ret)
             return ret
 
         title = template_utils.fullyQualifiedTemplateTitle(title)
@@ -218,10 +226,11 @@ class Extractor(object):
             del options.templates[title]
         else:
             # The page being included could not be identified
-            logging.debug('%*s<EXPAND %s %s', self.frame.depth, '', title, '')
+            logger.debug('%*s<EXPAND %s %s', self.frame.depth, '', title, '')
             return ''
 
-        logging.debug('%*sTEMPLATE %s: %s', self.frame.depth, '', title, template)
+        logger.debug('%*sTEMPLATE %s: %s',
+                     self.frame.depth, '', title, template)
 
         # tplarg          = "{{{" parts "}}}"
         # parts           = [ title *( "|" part ) ]
@@ -273,7 +282,7 @@ class Extractor(object):
         instantiated = template.subst(params, self)
         value = self.transform(instantiated)
         self.frame = self.frame.pop()
-        logging.debug('%*s<EXPAND %s %s', self.frame.depth, '', title, value)
+        logger.debug('%*s<EXPAND %s %s', self.frame.depth, '', title, value)
         return value
 
     def expand(self, wikitext):
@@ -304,7 +313,7 @@ class Extractor(object):
             self.recursion_exceeded_1_errs += 1
             return res
 
-        # logging.debug('%*s<expand', self.frame.depth, '')
+        # logger.debug('%*s<expand', self.frame.depth, '')
 
         cur = 0
         # look for matching {{...}}
@@ -313,7 +322,7 @@ class Extractor(object):
             cur = e
         # leftover
         res += wikitext[cur:]
-        # logging.debug('%*sexpand> %s', self.frame.depth, '', res)
+        # logger.debug('%*sexpand> %s', self.frame.depth, '', res)
         return res
 
     def clean(self, text):
@@ -329,11 +338,11 @@ class Extractor(object):
         placeholder_tag_patterns = [
             (re.compile(r'<\s*%s(\s*| [^>]+?)>.*?<\s*/\s*%s\s*>' % (tag, tag), re.DOTALL | re.IGNORECASE),
              repl) for tag, repl in placeholder_tags.items()
-            ]
+        ]
         # Match selfClosing HTML tags
         selfClosing_tag_patterns = [
             re.compile(r'<\s*%s\b[^>]*/\s*>' % tag, re.DOTALL | re.IGNORECASE) for tag in selfClosingTags
-            ]
+        ]
         comment = re.compile(r'<!--.*?-->', re.DOTALL)
         # Collect spans
         spans = []
@@ -358,7 +367,8 @@ class Extractor(object):
 
         # Drop discarded elements
         for tag in options.discardElements:
-            text = wutils.dropNested(text, r'<\s*%s\b[^>/]*>' % tag, r'<\s*/\s*%s>' % tag)
+            text = wutils.dropNested(
+                text, r'<\s*%s\b[^>/]*>' % tag, r'<\s*/\s*%s>' % tag)
 
         if not options.toHTML:
             # Turn into text what is left (&amp;nbsp;) and <syntaxhighlight>
@@ -368,7 +378,8 @@ class Extractor(object):
         for pattern, placeholder in placeholder_tag_patterns:
             index = 1
             for match in pattern.finditer(text):
-                text = text.replace(match.group(), '%s_%d' % (placeholder, index))
+                text = text.replace(match.group(), '%s_%d' %
+                                    (placeholder, index))
                 index += 1
 
         text = text.replace('<<', '«').replace('>>', '»')
@@ -385,14 +396,17 @@ class Extractor(object):
         text = dots.sub('...', text)
         text = re.sub(' (,:\.\)\]»)', r'\1', text)
         text = re.sub('(\[\(«) ', r'\1', text)
-        text = re.sub(r'\n\W+?\n', '\n', text, flags=re.U)  # lines with only punctuations
+        # lines with only punctuations
+        text = re.sub(r'\n\W+?\n', '\n', text, flags=re.U)
         text = text.replace(',,', ',').replace(',.', '.')
         if options.keep_tables:
             # the following regular expressions are used to remove the wikiml chartacters around table strucutures
             # yet keep the content. The order here is imporant so we remove certain markup like {| and then
-            # then the future html attributes such as 'style'. Finally we drop the remaining '|-' that delimits cells.
+            # then the future html attributes such as 'style'. Finally we drop
+            # the remaining '|-' that delimits cells.
             text = re.sub(r'!(?:\s)?style=\"[a-z]+:(?:\d+)%;\"', r'', text)
-            text = re.sub(r'!(?:\s)?style="[a-z]+:(?:\d+)%;[a-z]+:(?:#)?(?:[0-9a-z]+)?"', r'', text)
+            text = re.sub(
+                r'!(?:\s)?style="[a-z]+:(?:\d+)%;[a-z]+:(?:#)?(?:[0-9a-z]+)?"', r'', text)
             text = text.replace('|-', '')
             text = text.replace('|', '')
         if options.toHTML:
@@ -415,8 +429,10 @@ class Extractor(object):
         # $text = $this->formatHeadings( $text, $origText, $isMain );
 
         # Drop tables
-        # first drop residual templates, or else empty parameter |} might look like end of table.
-        syntaxhighlight = re.compile('&lt;syntaxhighlight .*?&gt;(.*?)&lt;/syntaxhighlight&gt;', re.DOTALL)
+        # first drop residual templates, or else empty parameter |} might look
+        # like end of table.
+        syntaxhighlight = re.compile(
+            '&lt;syntaxhighlight .*?&gt;(.*?)&lt;/syntaxhighlight&gt;', re.DOTALL)
         magicWordsRE = re.compile('|'.join(MagicWords.switches))
         # Matches bold/italic
         bold_italic = re.compile(r"'''''(.*?)'''''")
@@ -482,7 +498,8 @@ class Extractor(object):
         cur = 0
         nowiki = re.compile(r'<nowiki>.*?</nowiki>')
         for m in nowiki.finditer(wikitext, cur):
-            res += self.transform1(wikitext[cur:m.start()]) + wikitext[m.start():m.end()]
+            res += self.transform1(wikitext[cur:m.start()]) + \
+                wikitext[m.start():m.end()]
             cur = m.end()
         # leftover
         res += self.transform1(wikitext[cur:])
@@ -492,7 +509,7 @@ class Extractor(object):
         """
         :param out: a memory file.
         """
-        logging.debug('%s\t%s', self.id, self.title)
+        logger.debug('%s\t%s', self.id, self.title)
 
         # Separate header from text with a newline.
         if options.toHTML:
@@ -503,18 +520,19 @@ class Extractor(object):
         colon = self.title.find(':')
         if colon != -1:
             ns = self.title[:colon]
-            pagename = self.title[colon+1:]
+            pagename = self.title[colon + 1:]
         else:
-            ns = '' # Main
+            ns = ''  # Main
             pagename = self.title
         self.magicWords['NAMESPACE'] = ns
-        self.magicWords['NAMESPACENUMBER'] = options.knownNamespaces.get(ns, '0')
+        self.magicWords[
+            'NAMESPACENUMBER'] = options.knownNamespaces.get(ns, '0')
         self.magicWords['PAGENAME'] = pagename
         self.magicWords['FULLPAGENAME'] = self.title
         slash = pagename.rfind('/')
         if slash != -1:
             self.magicWords['BASEPAGENAME'] = pagename[:slash]
-            self.magicWords['SUBPAGENAME'] = pagename[slash+1:]
+            self.magicWords['SUBPAGENAME'] = pagename[slash + 1:]
         else:
             self.magicWords['BASEPAGENAME'] = pagename
             self.magicWords['SUBPAGENAME'] = ''
