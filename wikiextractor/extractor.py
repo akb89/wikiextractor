@@ -1,10 +1,8 @@
 import cgi
-import json
+import logging
 import re
-import sys
 import time
 
-import logger
 import wikiextractor.brace as brace_utils
 import wikiextractor.external as ext_utils
 import wikiextractor.parser as parser
