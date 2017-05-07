@@ -49,7 +49,6 @@ class Extractor(object):
 
         if not parameters:
             return templateParams
-        # logger.debug('%*s<templateParams: %s', self.frame.length, '', '|'.join(parameters))
 
         # Parameters can be either named or unnamed. In the latter case, their
         # name is defined by their ordinal position (1, 2, 3, ...).
@@ -105,7 +104,6 @@ class Extractor(object):
                 if ']]' not in param:  # if the value does not contain a link, trim whitespace
                     param = param.strip()
                 templateParams[str(unnamedParameterCounter)] = param
-        # logger.debug('%*stemplateParams> %s', self.frame.length, '', '|'.join(templateParams.values()))
         return templateParams
 
     def expandTemplate(self, body):
@@ -157,7 +155,6 @@ class Extractor(object):
 
         if self.frame.depth >= self.maxTemplateRecursionLevels:
             self.recursion_exceeded_2_errs += 1
-            # logger.debug('%*sEXPAND> %s', self.frame.depth, '', body)
             return ''
 
         logger.debug('%*sEXPAND %s', self.frame.depth, '', body)
@@ -311,8 +308,6 @@ class Extractor(object):
             self.recursion_exceeded_1_errs += 1
             return res
 
-        # logger.debug('%*s<expand', self.frame.depth, '')
-
         cur = 0
         # look for matching {{...}}
         for s, e in brace_utils.findMatchingBraces(wikitext, 2):
@@ -320,7 +315,6 @@ class Extractor(object):
             cur = e
         # leftover
         res += wikitext[cur:]
-        # logger.debug('%*sexpand> %s', self.frame.depth, '', res)
         return res
 
     def clean(self, text):
