@@ -1,4 +1,4 @@
-"""Welcome to a primitivaly refactored version of Wikiextractor.
+"""Welcome to a refactored version of Wikiextractor.
 
 For now we have just modified the overall structure and setup.py file in order
 to make wikiextractor usable as a python module
@@ -12,7 +12,7 @@ setuptools.setup(
                 'database dump',
     author='Giuseppe Attardi',
     author_email='attardi@di.unipi.it',
-    version='2.69',
+    version='3.0',
     url='https://github.com/akb89/wikiextractor',
     license='GPL 3.0',
     keywords=['text', 'nlp'],

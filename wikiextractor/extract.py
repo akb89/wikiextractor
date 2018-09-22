@@ -71,8 +71,14 @@ def pages_from(input):
 
 def extract(input_file):
     with open(input_file, 'r') as input_stream:
-        json_objects = []
         for page_data in pages_from(input_stream):
             id, revid, title, ns, page = page_data
-            json_objects.append(Extractor(id, revid, title, page).extract_to_json())
-        return json_objects
+            yield Extractor(id, revid, title, page).extract_to_json()
+
+# def extract(input_file):
+#     with open(input_file, 'r') as input_stream:
+#         json_objects = []
+#         for page_data in pages_from(input_stream):
+#             id, revid, title, ns, page = page_data
+#             json_objects.append(Extractor(id, revid, title, page).extract_to_json())
+#         return json_objects
