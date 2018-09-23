@@ -550,7 +550,7 @@ class Extractor(object):
         text = self.transform(text)
         text = self.wiki2text(text)
         text = wutils.compact(self.clean(text))
-        text = [title_str] + text
+        # text = [title_str] + text  ## Do not include title in text
 
         if sum(len(line) for line in text) < options.min_text_length:
             return

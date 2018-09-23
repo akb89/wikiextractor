@@ -12,7 +12,7 @@ setuptools.setup(
                 'database dump',
     author='Giuseppe Attardi',
     author_email='attardi@di.unipi.it',
-    version='3.0',
+    version='3.0.1',
     url='https://github.com/akb89/wikiextractor',
     license='GPL 3.0',
     keywords=['text', 'nlp'],
