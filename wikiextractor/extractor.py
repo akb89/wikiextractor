@@ -311,7 +311,7 @@ class Extractor(object):
         cur = 0
         # look for matching {{...}}
         for s, e in brace_utils.findMatchingBraces(wikitext, 2):
-            res = '{}{}{}'.format(res, wikitext[cur:s], self.expandTemplate(wikitext[s + 2:e - 2])
+            res = '{}{}{}'.format(res, wikitext[cur:s], self.expandTemplate(wikitext[s + 2:e - 2]))
             #res += wikitext[cur:s] + self.expandTemplate(wikitext[s + 2:e - 2])
             cur = e
         # leftover
